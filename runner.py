@@ -3,12 +3,15 @@ from torch.autograd import Variable
 
 
 def get_vars(batch, *keys, use_cuda=False):
-    def tovar(t):
+    def tovar(key):
+        if key is None:
+            return None
+        t = batch[key]
         return Variable(t).cuda() if use_cuda else Variable(t)
 
     if len(keys) == 1:
-        return tovar(batch[keys[0]])
-    return (tovar(batch[key]) for key in keys)
+        return tovar(keys[0])
+    return (tovar(key) for key in keys)
 
 
 class Runner(metaclass=ABCMeta):
