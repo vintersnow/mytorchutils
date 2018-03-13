@@ -18,6 +18,7 @@ class Runner(metaclass=ABCMeta):
     '''
     run forward step and calculate the loss
     '''
+
     def __init__(self, criterion):
         self.criterion = criterion
 

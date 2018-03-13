@@ -67,8 +67,8 @@ def load_ckpt(model, method='latest'):
     def best(files):
         reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
         files = [reg.search(f) for f in files]
-        files = [(r.group(0), int(r.group(1)), float(r.group(2))) for r in files
-                 if r is not None]
+        files = [(r.group(0), int(r.group(1)), float(r.group(2)))
+                 for r in files if r is not None]
         if len(files) > 0:
             return min(files, key=lambda x: x[2])
         else:
