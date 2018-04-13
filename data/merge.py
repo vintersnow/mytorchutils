@@ -23,7 +23,12 @@ def make_mask(pad_size, max_len, value=1):
     return torch.ByteTensor([0] * (max_len - pad_size) + [1] * pad_size)
 
 
-def merge_samples(samples, text_key=[], ignore_key=[], sortby=None):
+def merge_samples(samples,
+                  text_key=[],
+                  ignore_key=[],
+                  sortby=None,
+                  padding=padding,
+                  make_mask=make_mask):
     '''
     samples (list[sample])
     text_key (list[str]): padding and mask
@@ -50,12 +55,20 @@ def merge_samples(samples, text_key=[], ignore_key=[], sortby=None):
     return batch
 
 
-def merge_fn(text_key=[], ignore_key=[], sortby=None):
+def merge_fn(text_key=[],
+             ignore_key=[],
+             sortby=None,
+             padding=padding,
+             make_mask=make_mask):
     '''make a collage_fn for text dataset
     text_key (list[str]): padding and mask
     ignore_key (list[str]): skip merging to a tensor
     sortby (lambda or None): sort samples in mini-batch
+    padding (function(Tensor, max_len(int))): pad the Tensor
+    make_mask (function(pad_size(int), max_len(int))): making mask
     '''
+
     def merge(samples):
         return merge_samples(samples, text_key, ignore_key, sortby)
+
     return merge
