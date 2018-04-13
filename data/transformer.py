@@ -27,6 +27,7 @@ class Text2Id(object):
 
 
 class ClipText(object):
+    '''textがmx_lenより長かった場合切り取る.'''
     def __init__(self, max_len, *keys):
         self.max_len = max_len
         self.keys = list(keys)
@@ -37,6 +38,7 @@ class ClipText(object):
         return txt, len(txt)
 
     def __call__(self, sample):
+        '''txtの長さを保持する`key` + _lenというattrを追加する'''
         for key in self.keys:
             sample[key], sample[key + '_len'] = self.clip(
                 sample[key], self.max_len)
