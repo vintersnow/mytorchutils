@@ -57,9 +57,9 @@ class Timeit(object):
 
     def pop(self):
         te = time.time()
-        st, tf, em = self._stack.pop()
+        _, tf, em = self._stack.pop()
         lap = (te - tf) * 1e3
-        print('%s: %f ms. %s' % (st, lap, em))
+        print('%s: %f ms.' % (em, lap))
 
     def __call__(self, state, start_msg='', end_msg=''):
         t = time.time()
