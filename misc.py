@@ -51,3 +51,25 @@ class Timer(object):
         return lap, all
 
 
+class Timeit(object):
+    def __init__(self):
+        self._stack = []
+
+    def pop(self):
+        te = time.time()
+        st, tf, em = self._stack.pop()
+        lap = (te - tf) * 1e3
+        print('%s: %f ms. %s' % (st, lap, em))
+
+    def __call__(self, state, start_msg='', end_msg=''):
+        t = time.time()
+        if start_msg:
+            print(start_msg, end='', flush=True)
+        self._stack.append((state, t, end_msg))
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.pop()
