@@ -1,9 +1,12 @@
-from . import get_logger
-from os import path
+from os import path, sys
 import numpy as np
 
 ap = path.dirname(path.abspath(__file__))  # dataloader
-root = path.dirname(path.dirname(ap))  # root
+root = path.dirname(ap)  # root
+sys.path.append(root)
+
+from logger import get_logger
+
 logger = get_logger(__name__)
 
 SENTENCE_START = '<s>'
