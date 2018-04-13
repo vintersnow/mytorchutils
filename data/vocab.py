@@ -67,7 +67,7 @@ class Vocab(object):
                         'Reached to max size of vocabulary: {}. Stop reading'.
                         format(max_size))
                     break
-        logger.info('Finished loading vocabulary')
+        logger.debug('Finished loading vocabulary')
 
         self.pad_id = self.word2id(PAD_TOKEN)
         self.start_id = self.word2id(START_DECODING)
