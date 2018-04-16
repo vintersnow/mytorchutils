@@ -70,6 +70,7 @@ class Vocab(object):
         logger.debug('Finished loading vocabulary')
 
         self.pad_id = self.word2id(PAD_TOKEN)
+        self.unk_id = self.word2id(UNKNOWN_TOKEN)
         self.start_id = self.word2id(START_DECODING)
         self.stop_id = self.word2id(STOP_DECODING)
 
