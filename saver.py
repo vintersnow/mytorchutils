@@ -74,14 +74,26 @@ def load_ckpt(model, method='latest'):
         else:
             return None, None
 
+    def from_file(file):
+        assert file in model_list
+        opt_file = file[:len(file) - len('.ckpt')] + '_opt,ckpt'
+        assert path.isfile(opt_file)
+        reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
+        r = reg.search(file)
+        step = r.group(1)
+        return file, opt_file, step
+
     if method == 'latest':
         ckpt_model, model_step = latest(model_list)
         ckpt_opt, opt_step = latest(opt_list)
     elif method == 'best':
         ckpt_model, model_step, model_loss = best(model_list)
         ckpt_opt, opt_step, _ = best(opt_list)
+    elif path.isfile(method):
+        ckpt_model, ckpt_opt, model_step = from_file(method)
+        opt_step = model_step
     else:
-        raise ValueError('Unknown method: %s' % method)
+        raise ValueError('Unknown method or file not exists: %s' % method)
 
     model.model.load_state_dict(torch.load(ckpt_model))
     if model.opt is None:
