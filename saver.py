@@ -76,7 +76,7 @@ def load_ckpt(model, method='latest'):
 
     def from_file(file):
         assert file in model_list
-        opt_file = file[:len(file) - len('.ckpt')] + '_opt,ckpt'
+        opt_file = file[:len(file) - len('.ckpt')] + '_opt.ckpt'
         assert path.isfile(opt_file)
         reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
         r = reg.search(file)
