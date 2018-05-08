@@ -1,13 +1,16 @@
 from abc import ABCMeta, abstractmethod
-from torch.autograd import Variable
+import torch
 
 
-def get_vars(batch, *keys, use_cuda=False):
+def get_vars(batch, *keys, device=None):
+    if not device:
+        device = torch.device('cpu')
+
     def tovar(key):
         if key is None:
             return None
         t = batch[key]
-        return Variable(t).cuda() if use_cuda else Variable(t)
+        return t.to(device)
 
     if len(keys) == 1:
         return tovar(keys[0])
@@ -19,12 +22,12 @@ class Runner(metaclass=ABCMeta):
     run forward step and calculate the loss
     '''
 
-    def __init__(self, criterion):
+    def __init__(self, criterion, device=torch.device('cpu')):
         self.criterion = criterion
+        self.device = device
 
     def getvars(self, batch, *keys):
-        use_cuda = self.use_cuda if hasattr(self, 'use_cuda') else False
-        return get_vars(batch, *keys, use_cuda=use_cuda)
+        return get_vars(batch, *keys, device=self.device)
 
     @abstractmethod
     def run(self):

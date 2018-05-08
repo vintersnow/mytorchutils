@@ -55,3 +55,8 @@ class Model(nn.Module):
         self.opt = opt
         if self.saver:
             self.saver._opt = opt
+
+    @property
+    def device(self):
+        p = self.model.parameters()
+        return next(p).device
