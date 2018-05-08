@@ -58,5 +58,7 @@ class Model(nn.Module):
 
     @property
     def device(self):
+        if hasattr(self, 'device'):
+            return self.device
         p = self.model.parameters()
         return next(p).device
