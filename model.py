@@ -58,7 +58,6 @@ class Model(nn.Module):
 
     @property
     def device(self):
-        if hasattr(self, 'device'):
-            return self.device
+        # 全てのパラメータが同一メモリにあると仮定している
         p = self.model.parameters()
         return next(p).device
