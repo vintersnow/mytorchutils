@@ -29,7 +29,7 @@ class Reader(object):
 
     def create_idx(self):
         lines = open(self.data_file, 'r').read().split('\n')
-        idx = np.asarray([0] + [utf8len(d) + 1 for i, d in enumerate(lines)])
+        idx = np.asarray([0] + [utf8len(d) + 1 for i, d in enumerate(lines)][:-1])
         idx = np.cumsum(idx)
 
         if self.protocol == 'pickle':
