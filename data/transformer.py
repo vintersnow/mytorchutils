@@ -38,7 +38,10 @@ class Token2Id(object):
 
     def __call__(self, sample):
         for key in self.keys:
-            sample[key] = [self.converter(w) for w in sample[key]]
+            if isinstance(sample[key], list) or isinstance(sample[key], tuple):
+                sample[key] = [self.converter(w) for w in sample[key]]
+            else:
+                sample[key] = self.converter(sample[key])
         return sample
 
 
