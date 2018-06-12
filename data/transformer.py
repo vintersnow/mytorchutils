@@ -26,6 +26,22 @@ class Text2Id(object):
         return sample
 
 
+class Token2Id(object):
+    def __init__(self, converter, *keys):
+        if isinstance(converter, dict):
+            self.converter = lambda x: converter[x]
+        elif callable(converter):
+            self.converter = converter
+        else:
+            raise ValueError('converter must be dict or callable')
+        self.keys = list(keys)
+
+    def __call__(self, sample):
+        for key in self.keys:
+            sample[key] = [self.converter(w) for w in sample[key]]
+        return sample
+
+
 class ClipText(object):
     '''textがmx_lenより長かった場合切り取る.'''
     def __init__(self, max_len, *keys):
@@ -42,4 +58,16 @@ class ClipText(object):
         for key in self.keys:
             sample[key], sample[key + '_len'] = self.clip(
                 sample[key], self.max_len)
+        return sample
+
+
+class Tokenizer(object):
+    def __init__(self, tokenizer, *keys):
+        assert callable(tokenizer)
+        self.tokenizer = tokenizer
+        self.keys = list(keys)
+
+    def __call__(self, sample):
+        for key in self.keys:
+            sample[key] = self.tokenizer(sample[key])
         return sample
