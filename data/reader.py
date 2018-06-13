@@ -1,21 +1,31 @@
 from os import path
 import mmap
-import pickle
+# import pickle
 import numpy as np
-import json
 
 
 def utf8len(s):
+    '''
+    Return byte length of utf-8 string
+
+    Examples
+    --------
+    >>> utf8len('aaaa')
+    4
+    >>> utf8len('あああ')
+    9
+    '''
     return len(s.encode('utf-8'))
 
 
 class Reader(object):
-    def __init__(self, data_file, idx_file=None, protocol='pickle'):
+    '''
+    ReadOneline data. Using indexes for faster read.
+
+    '''
+    def __init__(self, data_file, idx_file=None):
         self.data_file = data_file
         self.idx_file = idx_file if idx_file else data_file + '.idx'
-
-        assert protocol == 'pickle' or protocol == 'json'
-        self.protocol = protocol
 
         if not path.exists(self.idx_file):
             self.create_idx()
@@ -28,27 +38,39 @@ class Reader(object):
         self.mm = mmap.mmap(f.fileno(), 0)
 
     def create_idx(self):
-        lines = open(self.data_file, 'r').read().split('\n')
-        idx = np.asarray([0] + [utf8len(d) + 1 for i, d in enumerate(lines)][:-1])
+        idx = [0]
+        with open(self.data_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                idx.append(utf8len(line))
+        idx = np.asarray(idx)
         idx = np.cumsum(idx)
 
-        if self.protocol == 'pickle':
-            with open(self.idx_file, 'wb') as f:
-                pickle.dump(idx, f, protocol=pickle.HIGHEST_PROTOCOL)  # 800ms
-        else:
-            with open(self.idx_file, 'w') as f:
-                json.dump(idx.tolist(), f)  # 1633ms
+        with open(self.idx_file, 'wb') as f:
+            np.save(f, idx)
+            # pickle.dump(idx, f, protocol=pickle.HIGHEST_PROTOCOL)  # 800ms
 
     def load_idx(self):
-        if self.protocol == 'pickle':
-            return pickle.load(open(self.idx_file, 'rb'))  # 44ms
-        else:
-            return json.load(open(self.idx_file, 'r'))  # 110ms
+        return np.load(self.idx_file, 'r')
+        # return pickle.load(open(self.idx_file, 'rb'))  # 44ms
 
     def __getitem__(self, i):
         idx = self.idx[i]
         self.mm.seek(idx)
-        return self.mm.readline()[:-1].decode('utf-8')
+        return self.mm.readline().decode('utf-8')
 
     def __len__(self):
         return len(self.idx) - 1
+
+
+if __name__ == '__main__':
+    from tempfile import NamedTemporaryFile
+    import os
+    t = NamedTemporaryFile()
+    with open(t.name, 'w') as f:
+        f.write('あああ\n')
+        f.write('bbbb\n')
+    r = Reader(t.name)
+    assert len(r) == 2, len(r)
+    assert r[1] == 'bbbb\n', r[2]
+    print('ok')
+    os.remove(r.idx_file)

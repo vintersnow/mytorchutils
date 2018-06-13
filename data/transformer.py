@@ -14,6 +14,7 @@ class ToTensor(object):
 
 
 class Text2Id(object):
+    '''Deprecate. Use Token2Id'''
     '''単語をID(int)に変換する.'''
 
     def __init__(self, vocab, *keys):
