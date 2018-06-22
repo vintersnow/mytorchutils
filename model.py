@@ -47,8 +47,12 @@ class Model(nn.Module):
 
     def make_writer(self, comment=''):
         summary_dir = path.join(self.log_dir, 'summary')
-        self.writer = SummaryWriter(summary_dir, comment)
-        return self.writer
+        self._writer = SummaryWriter(summary_dir, comment)
+        return self._writer
+
+    def __del__(self):
+        if hasattr(self, '_writer'):
+            self._writer.close()
 
     # 後から追加するの気持ちわるい？
     def addopt(self, opt):
@@ -61,3 +65,9 @@ class Model(nn.Module):
         # 全てのパラメータが同一メモリにあると仮定している
         p = self.model.parameters()
         return next(p).device
+
+    @property
+    def writer(self):
+        if not hasattr(self, '_writer'):
+            return self.make_writer(self)
+        return self._writer
