@@ -22,12 +22,12 @@ class OneLinePrint(object):
         self._pstr = ''
         return self
 
-    def __call__(self, first_msg):
+    def __call__(self, first_msg=''):
         self._pstr = ''
         return self
 
     def __enter__(self):
-        return self
+        return self.write
 
     def __exit__(self, type, value, traceback):
         self.flush()
