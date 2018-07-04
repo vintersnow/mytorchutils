@@ -88,10 +88,10 @@ def load_ckpt(model, method='latest'):
         ckpt_model, model_step = latest(model_list)
         ckpt_opt, opt_step = latest(opt_list)
     elif method == 'highest':
-        ckpt_model, model_step, model_loss = best(model_list)
+        ckpt_model, model_step, model_loss = best(model_list, max)
         ckpt_opt, opt_step, _ = best(opt_list, max)
     elif method == 'lowest':
-        ckpt_model, model_step, model_loss = best(model_list)
+        ckpt_model, model_step, model_loss = best(model_list, min)
         ckpt_opt, opt_step, _ = best(opt_list, min)
     elif path.isfile(method):
         ckpt_model, ckpt_opt, model_step = from_file(method)
