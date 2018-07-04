@@ -64,13 +64,14 @@ def load_ckpt(model, method='latest'):
         else:
             return None, None
 
-    def best(files):
+    def best(files, m):
         reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
         files = [reg.search(f) for f in files]
         files = [(r.group(0), int(r.group(1)), float(r.group(2)))
                  for r in files if r is not None]
+
         if len(files) > 0:
-            return min(files, key=lambda x: x[2])
+            return m(files, key=lambda x: x[2])
         else:
             return None, None
 
@@ -86,9 +87,12 @@ def load_ckpt(model, method='latest'):
     if method == 'latest':
         ckpt_model, model_step = latest(model_list)
         ckpt_opt, opt_step = latest(opt_list)
-    elif method == 'best':
+    elif method == 'highest':
         ckpt_model, model_step, model_loss = best(model_list)
-        ckpt_opt, opt_step, _ = best(opt_list)
+        ckpt_opt, opt_step, _ = best(opt_list, max)
+    elif method == 'lowest':
+        ckpt_model, model_step, model_loss = best(model_list)
+        ckpt_opt, opt_step, _ = best(opt_list, min)
     elif path.isfile(method):
         ckpt_model, ckpt_opt, model_step = from_file(method)
         opt_step = model_step
