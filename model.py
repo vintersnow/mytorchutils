@@ -15,6 +15,7 @@ class Model(nn.Module):
         if log_root is None:
             self.nolog = True
         else:
+            self.nolog = False
             self.log_root = log_root
             self.log_dir = path.join(log_root, name)
 
