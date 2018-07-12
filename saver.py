@@ -65,6 +65,7 @@ def load_ckpt(model, method='latest'):
             return None, None
 
     def best(files, m):
+        # TODO: formatを変えれるもしくは、lossではない単語にした方が良い
         reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
         files = [reg.search(f) for f in files]
         files = [(r.group(0), int(r.group(1)), float(r.group(2)))
