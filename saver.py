@@ -1,5 +1,5 @@
 import torch
-from os import path, makedirs, rename
+from os import path, makedirs, rename, remove
 import itertools
 import glob
 import re
@@ -9,15 +9,18 @@ logger = get_logger(__name__, INFO)
 
 
 class Saver(object):
-    def __init__(self, model, opt=None, cont=False):
+    def __init__(self, model, opt=None, cont=False, metric='lower', keep_all=True):
         '''
         Args:
             cont (bool): Trueなら新しいディレクトリを作らない
         '''
+        assert metric == 'lower' or metric == 'higher', metric
         self._log_dir = path.join(model.log_dir, 'train')
         self._name = model.name
         self._model = model.model
         self._opt = opt
+        self.metric = metric
+        self.keep_all = keep_all
 
         if cont:
             if path.isdir(self._log_dir):
@@ -37,14 +40,53 @@ class Saver(object):
         with open(path.join(self._log_dir, self._name + '.model'), 'w') as f:
             f.write(str(model))
 
-    def save(self, step, loss):
-        file_name = 'step-%d_loss-%.3f.ckpt' % (step, loss)
+    def ckpt_list(self):
+        ckpt_dir = path.join(self._log_dir, 'train')
+        ckpts = glob.glob(path.join(ckpt_dir, '*[0-9].ckpt'))
+        reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
+        files = [reg.search(f) for f in ckpts]
+        files = [(r.group(0), int(r.group(1)), float(r.group(2)))
+                 for r in files if r is not None]
+
+    def best(self):
+        files = self.ckpt_list()
+        mm = max if self.metric == 'higher' else min
+        if len(files) > 0:
+            return mm(files, key=lambda x: x[2])
+        else:
+            return None, None
+
+    def latest(self):
+        files = self.ckpt_list()
+        if len(files) > 0:
+            return max(files, key=lambda x: x[1])
+        else:
+            return None, None
+
+    def rm_ckpt(self, step):
+        ckpt_dir = path.join(self._log_dir, 'train')
+        ckpts = glob.glob(path.join(ckpt_dir, 'step-%d_.*[0-9].ckpt' % step))
+        for file in ckpts:
+            if path.isfile(file):
+                remove(file)
+
+    def save(self, step, score):
+        best_file, best_step, best_score = self.best()
+        latest_file, latest_step, _ = self.latest()
+
+        file_name = 'step-%d_loss-%.3f.ckpt' % (step, score)
         file_path = path.join(self._log_dir, file_name)
         torch.save(self._model.state_dict(), file_path)
         if self._opt:
-            opt_file_name = 'step-%d_loss-%.3f_opt.ckpt' % (step, loss)
+            opt_file_name = 'step-%d_loss-%.3f_opt.ckpt' % (step, score)
             opt_file_path = path.join(self._log_dir, opt_file_name)
             torch.save(self._opt.state_dict(), opt_file_path)
+
+        if not self.keep_all:
+            sign = 1 if self.metric == 'higher' else -1
+            if (score - best_score) * sign > 0:
+                self.rm_ckpt(step)
+            self.rm_ckpt(latest_step)
 
 
 def load_ckpt(model, method='latest'):
@@ -109,3 +151,12 @@ def load_ckpt(model, method='latest'):
     else:
         logger.error('No ckpt for opt: path "%s"' % ckpt_dir)
     return model_step, ckpt_model
+
+
+if __name__ == '__main__':
+    from .model import Model
+    ly = torch.nn.Linear(10, 10)
+    m = Model(ly, 'test', '.')
+    m.addopt(torch.optim.SGD(ly.parameters(), 1))
+    for i in range(10):
+        m.save(i, i)

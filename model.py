@@ -45,11 +45,11 @@ class Model(nn.Module):
         self.cont = True
         return load_ckpt(self, method)
 
-    def save(self, step, loss):
+    def save(self, step, loss, metric='lower'):
         if self.nolog:
             raise ValueError('No log directory')
         if self.saver is None:
-            self.saver = Saver(self, self.opt, self.cont)
+            self.saver = Saver(self, self.opt, self.cont, metric, False)
 
         self.saver.save(step, loss)
 
