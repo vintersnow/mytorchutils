@@ -6,7 +6,7 @@ import json
 
 class JsonLineDataset(Dataset):
     def __init__(self, file, transform=None):
-        assert path.isfile(file)
+        assert path.isfile(file), file
         self.file = file
         self.data = Reader(file)
 
