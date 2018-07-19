@@ -6,12 +6,14 @@ from tensorboardX import SummaryWriter
 
 
 class Model(nn.Module):
-    def __init__(self, model, name, log_root=None, opt=None, hps=None):
+    def __init__(self, model, name, log_root=None, opt=None, hps=None, metric=None):
         super(Model, self).__init__()
 
         self.model = model
         self.name = name
         self.opt = opt
+        self.metric = metric
+
         if log_root is None:
             self.nolog = True
         else:
@@ -45,14 +47,14 @@ class Model(nn.Module):
         self.cont = True
         return load_ckpt(self, method)
 
-    def save(self, step, loss, metric=None):
+    def save(self, step, loss):
         if self.nolog:
             raise ValueError('No log directory')
         if self.saver is None:
-            if metric is None:
+            if self.metric is None:
                 self.saver = Saver(self, self.opt, self.cont)
             else:
-                self.saver = Saver(self, self.opt, self.cont, metric, False)
+                self.saver = Saver(self, self.opt, self.cont, self.metric, False)
 
         self.saver.save(step, loss)
 
