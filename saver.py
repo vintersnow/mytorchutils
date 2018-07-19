@@ -89,7 +89,7 @@ class Saver(object):
         if not self.keep_all and best_score is not None:
             sign = 1 if self.metric == 'higher' else -1
             if (score - best_score) * sign > 0:
-                self.rm_ckpt(step)
+                self.rm_ckpt(best_step)
             if best_step != latest_step:
                 self.rm_ckpt(latest_step)
 
