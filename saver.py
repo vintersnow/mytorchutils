@@ -9,7 +9,12 @@ logger = get_logger(__name__, INFO)
 
 
 class Saver(object):
-    def __init__(self, model, opt=None, cont=False, metric='lower', keep_all=True):
+    def __init__(self,
+                 model,
+                 opt=None,
+                 cont=False,
+                 metric='lower',
+                 keep_all=True):
         '''
         Args:
             cont (bool): Trueなら新しいディレクトリを作らない
@@ -41,12 +46,12 @@ class Saver(object):
             f.write(str(model))
 
     def ckpt_list(self):
-        ckpt_dir = path.join(self._log_dir, 'train')
-        ckpts = glob.glob(path.join(ckpt_dir, '*[0-9].ckpt'))
+        ckpts = glob.glob(path.join(self._log_dir, '*[0-9].ckpt'))
         reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
         files = [reg.search(f) for f in ckpts]
         files = [(r.group(0), int(r.group(1)), float(r.group(2)))
                  for r in files if r is not None]
+        return files
 
     def best(self):
         files = self.ckpt_list()
@@ -54,18 +59,17 @@ class Saver(object):
         if len(files) > 0:
             return mm(files, key=lambda x: x[2])
         else:
-            return None, None
+            return None, None, None
 
     def latest(self):
         files = self.ckpt_list()
         if len(files) > 0:
             return max(files, key=lambda x: x[1])
         else:
-            return None, None
+            return None, None, None
 
     def rm_ckpt(self, step):
-        ckpt_dir = path.join(self._log_dir, 'train')
-        ckpts = glob.glob(path.join(ckpt_dir, 'step-%d_.*[0-9].ckpt' % step))
+        ckpts = glob.glob(path.join(self._log_dir, 'step-%d_*.ckpt' % step))
         for file in ckpts:
             if path.isfile(file):
                 remove(file)
@@ -82,11 +86,12 @@ class Saver(object):
             opt_file_path = path.join(self._log_dir, opt_file_name)
             torch.save(self._opt.state_dict(), opt_file_path)
 
-        if not self.keep_all:
+        if not self.keep_all and best_score is not None:
             sign = 1 if self.metric == 'higher' else -1
             if (score - best_score) * sign > 0:
                 self.rm_ckpt(step)
-            self.rm_ckpt(latest_step)
+            if best_step != latest_step:
+                self.rm_ckpt(latest_step)
 
 
 def load_ckpt(model, method='latest'):
