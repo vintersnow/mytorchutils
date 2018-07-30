@@ -5,9 +5,7 @@ ap = path.dirname(path.abspath(__file__))  # dataloader
 root = path.dirname(ap)  # root
 sys.path.append(root)
 
-from logger import get_logger
-
-logger = get_logger(__name__)
+from logger import get_logger, ERROR
 
 SENTENCE_START = '<s>'
 SENTENCE_END = '</s>'
@@ -21,7 +19,7 @@ STOP_DECODING = '_STOP_'
 class Vocab(object):
     """単語とidをmappingするクラス"""
 
-    def __init__(self, vocab_file, max_size, min_feq=0, lower=False):
+    def __init__(self, vocab_file, max_size, min_feq=0, lower=False, verbose=False):
         """
         Args:
             Vocab_file: 語彙ファイルまでのpath. 語彙ファイルの各行は"<word>
@@ -29,6 +27,10 @@ class Vocab(object):
             max_size: 使用する最大単語する（頻度順）. 0の時は全単語を使用.
             lower (bool): Trueなら、全て小文字化する.
         """
+        if verbose:
+            logger = get_logger(__name__)
+        else:
+            logger = get_logger(__name__, ERROR)
 
         self._word_to_id = {}
         self._id_to_word = {-1: ''}
