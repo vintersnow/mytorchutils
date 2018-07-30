@@ -21,12 +21,13 @@ STOP_DECODING = '_STOP_'
 class Vocab(object):
     """単語とidをmappingするクラス"""
 
-    def __init__(self, vocab_file, max_size, min_feq=0):
+    def __init__(self, vocab_file, max_size, min_feq=0, lower=False):
         """
         Args:
             Vocab_file: 語彙ファイルまでのpath. 語彙ファイルの各行は"<word>
             <frequency>"という形式でfrequency順のソートされている前提.
             max_size: 使用する最大単語する（頻度順）. 0の時は全単語を使用.
+            lower (bool): Trueなら、全て小文字化する.
         """
 
         self._word_to_id = {}
@@ -51,11 +52,14 @@ class Vocab(object):
                         format(line))
                     continue
                 w = pieces[0]
+                if lower:
+                    w = w.lower()
                 if w in special_tokens:
                     raise Exception(
                         'A word "{}" conflicts with special_tokens'.format(w))
                 if w in self._word_to_id:
-                    raise Exception('Dupilcated word: {}'.format(w))
+                    continue
+                    # raise Exception('Dupilcated word: {}'.format(w))
                 if len(pieces) >= 2 and int(pieces[1]) <= min_feq:
                     # skip rare word
                     continue
