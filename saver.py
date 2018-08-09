@@ -121,7 +121,7 @@ def load_ckpt(model, method='latest'):
         if len(files) > 0:
             return m(files, key=lambda x: x[2])
         else:
-            return None, None
+            return None, None, None
 
     def from_file(file):
         assert file in model_list
