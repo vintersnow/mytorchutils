@@ -126,10 +126,11 @@ def load_ckpt(model, method='latest'):
     def from_file(file):
         assert file in model_list
         opt_file = file[:len(file) - len('.ckpt')] + '_opt.ckpt'
-        assert path.isfile(opt_file)
+        if not path.isfile(opt_file):
+            opt_file = None
         reg = re.compile(r'.*step-([0-9]+)_loss-([0-9]+.[0-9]+).*')
         r = reg.search(file)
-        step = r.group(1)
+        step = int(r.group(1))
         return file, opt_file, step
 
     if method == 'latest':
@@ -151,7 +152,7 @@ def load_ckpt(model, method='latest'):
     if model.opt is None:
         return model_step, ckpt_model
 
-    if opt_step == model_step:
+    if opt_step == model_step and ckpt_opt is not None:
         model.opt.load_state_dict(torch.load(ckpt_opt))
     else:
         logger.error('No ckpt for opt: path "%s"' % ckpt_dir)
