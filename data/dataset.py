@@ -45,12 +45,15 @@ class BaseDataset(Dataset):
 
 
 class LineDataset(BaseDataset):
-    def __init__(self, *args, **keys):
+    def __init__(self, key, *args, **keys):
         super(LineDataset, self).__init__(*args, **keys)
         self.data = Reader(self.file)
+        self.key = key
 
     def prepare(self, idx):
-        return self.data[idx]
+        sample = {}
+        sample[self.key] = self.data[idx]
+        return sample
 
 
 class JsonLineDataset(BaseDataset):
