@@ -14,7 +14,7 @@ def padding(s, max_len, value=0):
     return padded, pad_size
 
 
-def make_mask(pad_size, max_len, value=1):
+def mask(pad_size, max_len, value=1):
     '''Args:
     pad_size (int): paddingの長さ
     max_len (int): 全体の長さ
@@ -27,8 +27,8 @@ def merge_samples(samples,
                   text_key=[],
                   ignore_key=[],
                   sortby=None,
-                  padding=padding,
-                  make_mask=make_mask):
+                  pad_value=0,
+                  make_mask=False):
     '''
     samples (list[sample])
     text_key (list[str]): padding and mask
@@ -42,8 +42,9 @@ def merge_samples(samples,
     for key in text_key:
         max_len = max(samples, key=lambda x: x[key].size(0))[key].size(0)
         for sample in samples:
-            sample[key], pad = padding(sample[key], max_len)
-            sample[key + '_mask'] = make_mask(pad, max_len)
+            sample[key], pad = padding(sample[key], max_len, pad_value)
+            if make_mask:
+                sample[key + '_mask'] = mask(pad, max_len)
 
     batch = {}
     for key in samples[0]:
@@ -58,8 +59,8 @@ def merge_samples(samples,
 def merge_fn(text_key=[],
              ignore_key=[],
              sortby=None,
-             padding=padding,
-             make_mask=make_mask):
+             pad_value=0,
+             make_mask=False):
     '''make a collage_fn for text dataset
     text_key (list[str]): padding and mask
     ignore_key (list[str]): skip merging to a tensor
@@ -69,6 +70,7 @@ def merge_fn(text_key=[],
     '''
 
     def merge(samples):
-        return merge_samples(samples, text_key, ignore_key, sortby)
+        return merge_samples(samples, text_key, ignore_key, sortby, pad_value,
+                             make_mask)
 
     return merge
