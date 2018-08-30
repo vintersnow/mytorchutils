@@ -12,7 +12,7 @@ class BaseDataset(Dataset):
         self.data = None
 
         self.transformer = transformer
-        self.transformed = [None] * len(self.data)
+        self.transformed = {}
         self.save_trans = save_trans
 
     def __len__(self):
@@ -32,7 +32,7 @@ class BaseDataset(Dataset):
         pass
 
     def __getitem__(self, idx):
-        if self.save_trans and self.transformed[idx]:
+        if self.save_trans and idx in self.transformed:
             return self.transformed[idx]
 
         sample = self.prepare(idx)
