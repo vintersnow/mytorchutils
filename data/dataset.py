@@ -46,7 +46,7 @@ class BaseDataset(Dataset):
 
 class LineDataset(BaseDataset):
     def __init__(self, *args, **keys):
-        super(LineDataset, *args, **keys)
+        super(LineDataset, self).__init__(*args, **keys)
         self.data = Reader(self.file)
 
     def prepare(self, idx):
