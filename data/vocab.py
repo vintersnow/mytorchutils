@@ -10,10 +10,8 @@ from logger import get_logger, ERROR
 SENTENCE_START = '<s>'
 SENTENCE_END = '</s>'
 
-PAD_TOKEN = '_PAD_'
-UNKNOWN_TOKEN = '_UNK_'
-START_DECODING = '_START_'
-STOP_DECODING = '_STOP_'
+PAD_TOKEN = '<pad>'
+UNKNOWN_TOKEN = '<unk>'
 
 
 class Vocab(object):
@@ -37,7 +35,7 @@ class Vocab(object):
         self._counter = 0
 
         self.special_tokens = special_tokens = [
-            PAD_TOKEN, START_DECODING, STOP_DECODING
+            PAD_TOKEN,
         ]
         for w in special_tokens:
             self._add_word(w)
@@ -77,8 +75,6 @@ class Vocab(object):
 
         self.pad_id = self.word2id(PAD_TOKEN)
         self.unk_id = self.word2id(UNKNOWN_TOKEN)
-        self.start_id = self.word2id(START_DECODING)
-        self.stop_id = self.word2id(STOP_DECODING)
 
     def _add_word(self, word):
         self._word_to_id[word] = self._counter
@@ -99,6 +95,9 @@ class Vocab(object):
 
     @property
     def size(self):
+        return self._counter
+
+    def __len__(self):
         return self._counter
 
 
