@@ -93,6 +93,12 @@ class Vocab(object):
             raise ValueError('Id not found in vocab: %d' % id)
         return self._id_to_word[id]
 
+    def __getitem__(self, key):
+        return self.word2id(key)
+
+    def DecodeIds(self, words):
+        return restore_text(words, self)
+
     @property
     def size(self):
         return self._counter
