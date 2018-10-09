@@ -9,6 +9,7 @@ logger = get_logger(__name__, INFO)
 
 
 class Saver(object):
+    # TODO: change ckpt file name 'loss' -> 'score'
     def __init__(self,
                  model,
                  opt=None,
