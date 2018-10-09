@@ -113,12 +113,12 @@ def restore_text(data, vocab, skips=[]):
         data: (sequence_length) list or ndarray include word id (integer)
         vocab:
     """
-    if isinstance(data, list):
-        data = np.array(data)
-
-    assert type(data).__module__ == np.__name__
-    stop_idx = np.where(data == vocab.stop_id)[0]
-    if len(stop_idx) > 0:
-        data = data[:stop_idx[0]]
+    # if isinstance(data, list):
+    #     data = np.array(data)
+    #
+    # assert type(data).__module__ == np.__name__
+    # stop_idx = np.where(data == vocab.stop_id)[0]
+    # if len(stop_idx) > 0:
+    #     data = data[:stop_idx[0]]
     text = ' '.join([vocab.id2word(id) for id in data if int(id) not in skips])
     return text
