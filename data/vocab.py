@@ -113,6 +113,7 @@ def restore_text(data, vocab, skips=[]):
         data: (sequence_length) list or ndarray include word id (integer)
         vocab:
     """
+    skips.append(vocab['<pad>'])
     # if isinstance(data, list):
     #     data = np.array(data)
     #
