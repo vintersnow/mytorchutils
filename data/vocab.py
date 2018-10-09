@@ -42,6 +42,8 @@ class Vocab(object):
         self.special_ids = [self.word2id(w) for w in self.special_tokens]
 
         self._add_word(UNKNOWN_TOKEN)
+        self._add_word(SENTENCE_START)
+        self._add_word(SENTENCE_END)
 
         with open(vocab_file, 'r', encoding='utf-8') as f:
             for line in f:
