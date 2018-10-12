@@ -4,8 +4,105 @@ import itertools
 import glob
 import re
 from .logger import get_logger, INFO
+from shutil import rmtree
 
 logger = get_logger(__name__, INFO)
+
+
+class MutliParamSaver(object):
+    def __init__(self,
+                 log_dir,
+                 cont=False,
+                 metric='lower',
+                 keep_all=True):
+        assert metric == 'lower' or metric == 'higher', metric
+        self._log_dir = log_dir
+        self.params = {}
+        self.metric = metric
+        self.keep_all = keep_all
+        self.format = 'step-%d_score-%.3f'
+
+        if cont:
+            if path.isdir(self._log_dir):
+                return
+            else:
+                raise ValueError('No dir to continue: %s' % self._log_dir)
+        else:
+            if path.isdir(self._log_dir):
+                raise ValueError('log directory already exist: %s' % self._log_dir)
+
+        makedirs(self._log_dir)
+
+    def rm_ckpt(self, dir):
+        rmtree(dir, ignore_errors=True)
+
+    def ckpt_list(self):
+        ckpts = glob.glob(path.join(self._log_dir, '*'))
+        # TODO: support format
+        reg = re.compile(r'.*step-([0-9]+)_score-([0-9]+.[0-9]+).*')
+        dirs = [reg.search(f) for f in ckpts]
+        dirs = [(r.group(0), int(r.group(1)), float(r.group(2))) for r in dirs if r is not None]
+        return dirs
+
+    def best(self):
+        files = self.ckpt_list()
+        mm = max if self.metric == 'higher' else min
+        if len(files) > 0:
+            return mm(files, key=lambda x: x[2])
+        else:
+            return None, None, None
+
+    def latest(self):
+        files = self.ckpt_list()
+        if len(files) > 0:
+            return max(files, key=lambda x: x[1])
+        else:
+            return None, None, None
+
+    def save(self, step, score):
+        best_dir, best_step, best_score = self.best()
+        latest_dir, latest_step, _ = self.latest()
+
+        assert latest_step != step, step
+
+        dir = path.join(self._log_dir, self.format % (step, score))
+
+        if path.isdir(dir):
+            logger.error('log dir for step %d exisit' % step)
+            return
+
+        makedirs(dir)
+
+        for key, val in self.params.items():
+            file_path = path.join(dir, key + '.ckpt')
+            torch.save(val.state_dict(), file_path)
+
+        if not self.keep_all and best_score is not None:
+            sign = 1 if self.metric == 'higher' else -1
+            if (score - best_score) * sign > 0:
+                self.rm_ckpt(best_dir)
+            if best_step != latest_step:
+                self.rm_ckpt(latest_dir)
+
+    def load_ckpt(self, method):
+        if method == 'highest' or method == 'lowest':
+            # assert self.metric == method
+            dir, step, score = self.best()
+        else:
+            dir, step, score = self.latest()
+
+        ckpts = glob.glob(path.join(dir, '*'))
+
+        params = {}
+        for ckpt in ckpts:
+            p = torch.load(ckpt)
+            key = path.basename(ckpt).replace('.ckpt', '')
+            params[key] = p
+
+        return params, step
+
+    def add_param(self, key, val):
+        self.params[key] = val
 
 
 class Saver(object):
@@ -20,6 +117,7 @@ class Saver(object):
         Args:
             cont (bool): Trueなら新しいディレクトリを作らない
         '''
+        logger.warning('Duplicated: Use MutliParamSaver')
         assert metric == 'lower' or metric == 'higher', metric
         self._log_dir = path.join(model.log_dir, 'train')
         self._name = model.name
@@ -96,6 +194,7 @@ class Saver(object):
 
 
 def load_ckpt(model, method='latest'):
+    logger.warning('Duplicated: Use MutliParamSaver')
     ckpt_dir = path.join(model.log_dir, 'train')
     model_list = glob.glob(path.join(ckpt_dir, '*[0-9].ckpt'))
     opt_list = glob.glob(path.join(ckpt_dir, '*_opt.ckpt'))
@@ -161,9 +260,18 @@ def load_ckpt(model, method='latest'):
 
 
 if __name__ == '__main__':
-    from .model import Model
+    # from .model import Model
     ly = torch.nn.Linear(10, 10)
-    m = Model(ly, 'test', '.')
-    m.addopt(torch.optim.SGD(ly.parameters(), 1))
+    opt = torch.optim.SGD(ly.parameters(), 1)
+    saver = MutliParamSaver('test')
+    saver.params['model'] = ly
+    saver.params['opt'] = opt
+    # m = Model(ly, 'test', '.')
+    # m.addopt(torch.optim.SGD(ly.parameters(), 1))
     for i in range(10):
-        m.save(i, i)
+        saver.save(i, 1 / float(i + 1))
+        opt.step()
+        # m.save(i, i)
+
+    ppp = saver.load('latest')
+    print(ppp)

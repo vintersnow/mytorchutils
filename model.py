@@ -1,17 +1,17 @@
 from torch import nn
 from os import path, makedirs
 import json
-from .saver import Saver, load_ckpt
+from .saver import MutliParamSaver
 from tensorboardX import SummaryWriter
 
 
 class Model(nn.Module):
-    def __init__(self, model, name, log_root=None, opt=None, hps=None, metric=None):
+    def __init__(self, model, name, log_root=None, opts={}, hps=None, metric=None, cont=False):
         super(Model, self).__init__()
 
         self.model = model
         self.name = name
-        self.opt = opt
+        self.opts = opts
         self.metric = metric
 
         if log_root is None:
@@ -34,8 +34,16 @@ class Model(nn.Module):
                     sort_keys=True,
                     separators=(',', ': '))
 
-        self.saver = None
-        self.cont = False
+            # print out model info
+            with open(path.join(self.log_dir, 'model_arch'), 'w') as f:
+                f.write(str(model))
+
+            # Saver
+            ckpt_dir = path.join(self.log_dir, 'train')
+            keep_all = metric is None
+            self.saver = MutliParamSaver(ckpt_dir, cont=cont, metric=metric, keep_all=keep_all)
+            self.saver.add_param('model', model)
+
         self.training = True
 
     def forward(self, *args, **keys):
@@ -44,17 +52,18 @@ class Model(nn.Module):
     def restore(self, method='latest'):
         if self.nolog:
             raise ValueError('No log directory')
-        self.cont = True
-        return load_ckpt(self, method)
+        params, step = self.saver.load_ckpt(method)
+        self.model.load_state_dict(params['model'])
+        params.pop('model', None)
+
+        for key, val in params.items():
+            if key in self.opts:
+                self.opts[key].load_state_dict(val)
+        return step
 
     def save(self, step, loss):
         if self.nolog:
             raise ValueError('No log directory')
-        if self.saver is None:
-            if self.metric is None:
-                self.saver = Saver(self, self.opt, self.cont)
-            else:
-                self.saver = Saver(self, self.opt, self.cont, self.metric, False)
 
         self.saver.save(step, loss)
 
@@ -69,11 +78,9 @@ class Model(nn.Module):
         if hasattr(self, '_writer'):
             self._writer.close()
 
-    # 後から追加するの気持ちわるい？
-    def addopt(self, opt):
-        self.opt = opt
-        if self.saver:
-            self.saver._opt = opt
+    def add_opt(self, key, opt):
+        self.opts[key] = opt
+        self.saver.add_param(key, opt)
 
     @property
     def device(self):
