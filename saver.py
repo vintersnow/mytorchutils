@@ -15,7 +15,9 @@ class MutliParamSaver(object):
                  cont=False,
                  metric='lower',
                  keep_all=True):
-        assert metric == 'lower' or metric == 'higher', metric
+        assert metric == 'lower' or metric == 'higher' or metric is None, metric
+        if metric is None:
+            assert keep_all
         self._log_dir = log_dir
         self.params = {}
         self.metric = metric
@@ -47,7 +49,7 @@ class MutliParamSaver(object):
     def best(self):
         files = self.ckpt_list()
         mm = max if self.metric == 'higher' else min
-        if len(files) > 0:
+        if len(files) > 0 and self.metric is not None:
             return mm(files, key=lambda x: x[2])
         else:
             return None, None, None
