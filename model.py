@@ -52,14 +52,14 @@ class Model(nn.Module):
     def restore(self, method='latest'):
         if self.nolog:
             raise ValueError('No log directory')
-        params, step = self.saver.load_ckpt(method)
+        params, step, dir = self.saver.load_ckpt(method)
         self.model.load_state_dict(params['model'])
         params.pop('model', None)
 
         for key, val in params.items():
             if key in self.opts:
                 self.opts[key].load_state_dict(val)
-        return step
+        return step, dir
 
     def save(self, step, loss):
         if self.nolog:

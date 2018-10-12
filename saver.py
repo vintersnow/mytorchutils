@@ -99,7 +99,7 @@ class MutliParamSaver(object):
             key = path.basename(ckpt).replace('.ckpt', '')
             params[key] = p
 
-        return params, step
+        return params, step, dir
 
     def add_param(self, key, val):
         self.params[key] = val
