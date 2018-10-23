@@ -46,13 +46,19 @@ class MutliParamSaver(object):
         dirs = [(r.group(0), int(r.group(1)), float(r.group(2))) for r in dirs if r is not None]
         return dirs
 
-    def best(self):
+    def best(self, metric):
         files = self.ckpt_list()
-        mm = max if self.metric == 'higher' else min
-        if len(files) > 0 and self.metric is not None:
-            return mm(files, key=lambda x: x[2])
-        else:
+        if metric == 'higher':
+            mm = max
+        elif metric == 'lower':
+            mm = min
+        elif len(files) == 0:
+            # logger.error('No ckpt found in %s' % self._log_dir)
             return None, None, None
+        else:
+            # logger.error('Unknown metric: %s' % metric)
+            return None, None, None
+        return mm(files, key=lambda x: x[2])
 
     def latest(self):
         files = self.ckpt_list()
@@ -62,7 +68,7 @@ class MutliParamSaver(object):
             return None, None, None
 
     def save(self, step, score):
-        best_dir, best_step, best_score = self.best()
+        best_dir, best_step, best_score = self.best(self.metric)
         latest_dir, latest_step, _ = self.latest()
 
         assert latest_step != step, step
@@ -89,7 +95,7 @@ class MutliParamSaver(object):
     def load_ckpt(self, method):
         if method == 'highest' or method == 'lowest':
             # assert self.metric == method
-            dir, step, score = self.best()
+            dir, step, score = self.best(method.replace('est', 'er'))
         else:
             dir, step, score = self.latest()
 
