@@ -40,6 +40,8 @@ def merge_samples(samples,
         samples = sorted(samples, key=sortby)
 
     for key in text_key:
+        if key not in samples[0]:
+            continue
         max_len = max(samples, key=lambda x: x[key].size(0))[key].size(0)
         for sample in samples:
             sample[key], pad = padding(sample[key], max_len, pad_value)
