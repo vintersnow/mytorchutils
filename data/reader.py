@@ -21,8 +21,8 @@ def utf8len(s):
 class Reader(object):
     '''
     ReadOneline data. Using indexes for faster read.
-
     '''
+
     def __init__(self, data_file, idx_file=None):
         self.data_file = data_file
         self.idx_file = idx_file if idx_file else data_file + '.idx'

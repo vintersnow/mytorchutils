@@ -37,7 +37,7 @@ class Runner(object):
     def run(self,
             train_ld,
             val_ld,
-            init_step=0,
+            init_epoch=0,
             max_epoch=5,
             max_step_each_epoch=0,
             save_model=False,
@@ -45,7 +45,7 @@ class Runner(object):
             clear_log_each_step=True):
         epoch_length = min(max_step_each_epoch, len(train_ld)) if max_step_each_epoch > 0 else len(train_ld)
 
-        for epoch in range(init_step // len(train_ld), max_epoch):
+        for epoch in range(init_epoch, max_epoch):
             self.ctx.epoch = epoch
 
             self.model.train()
