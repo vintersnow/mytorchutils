@@ -94,7 +94,7 @@ class Runner(object):
 
             # save model
             if save_model > 0:
-                self.model.save(step, val_score)
+                self.model.save(epoch, val_score)
 
     def train_step(self, batch):
         raise NotImplementedError()
