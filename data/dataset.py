@@ -3,6 +3,7 @@ from os import path
 from .reader import Reader
 import json
 from abc import abstractmethod
+from collections import Counter
 
 
 class BaseDataset(Dataset):
@@ -65,13 +66,14 @@ class JsonLineDataset(BaseDataset):
         return json.loads(self.data[idx])
 
 
-def create_weights_for_balanced_classes(data, nclasses):
-    count = [0] * nclasses
-    for i in range(len(data)):
-        count[data[i]['topic']] += 1
-    weight_per_class = [0.] * nclasses
-    N = float(sum(count))
-    weight_per_class = [N / float(c) if c > 0 else 0 for c in count]
-    weight = [0] * len(data)
-    weight = [weight_per_class[data[i]['topic']] for i in range(len(data))]
+def create_weights_for_balanced_classes(classes, class_key=None):
+    if class_key is None:
+        class_key = set(classes)
+
+    count = Counter(classes)
+    assert set(count.keys()) <= class_key, (count.keys(), class_key)
+
+    N = float(sum(count.values()))
+    weight_per_class = {c: N / float(v) if v > 0 else 0 for c, v in count.items()}
+    weight = [weight_per_class[c] for c in classes]
     return weight
