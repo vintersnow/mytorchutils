@@ -63,3 +63,15 @@ class JsonLineDataset(BaseDataset):
 
     def prepare(self, idx):
         return json.loads(self.data[idx])
+
+
+def make_weights_for_balanced_classes(data, nclasses):
+    count = [0] * nclasses
+    for i in range(len(data)):
+        count[data[i]['topic']] += 1
+    weight_per_class = [0.] * nclasses
+    N = float(sum(count))
+    weight_per_class = [N / float(c) if c > 0 else 0 for c in count]
+    weight = [0] * len(data)
+    weight = [weight_per_class[data[i]['topic']] for i in range(len(data))]
+    return weight
