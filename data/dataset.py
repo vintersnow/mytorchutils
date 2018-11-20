@@ -65,7 +65,7 @@ class JsonLineDataset(BaseDataset):
         return json.loads(self.data[idx])
 
 
-def make_weights_for_balanced_classes(data, nclasses):
+def create_weights_for_balanced_classes(data, nclasses):
     count = [0] * nclasses
     for i in range(len(data)):
         count[data[i]['topic']] += 1
