@@ -75,3 +75,14 @@ class Tokenizer(object):
         for key in self.keys:
             sample[key] = self.tokenizer(sample[key])
         return sample
+
+
+class Chain(object):
+    def __init__(self, *transformers):
+        self.trans = list(transformers)
+        assert len(self.trans) > 0
+
+    def __call__(self, sample):
+        for c in self.trans:
+            sample = c(sample)
+        return sample
