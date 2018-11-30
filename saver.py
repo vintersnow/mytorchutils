@@ -6,20 +6,24 @@ import re
 from .logger import get_logger, INFO
 from shutil import rmtree
 
+from typing import Union, Tuple, List, Dict, Optional, Any, cast
+
 logger = get_logger(__name__, INFO)
+
+ckpt_t = Tuple[Optional[str], Optional[int], Optional[float]]
 
 
 class MutliParamSaver(object):
     def __init__(self,
-                 log_dir,
-                 cont=False,
-                 metric='lower',
-                 keep_all=True):
+                 log_dir: str,
+                 cont: bool = False,
+                 metric: Optional[str] = 'lower',
+                 keep_all: bool = True) -> None:
         assert metric == 'lower' or metric == 'higher' or metric is None, metric
         if metric is None:
             assert keep_all
         self._log_dir = log_dir
-        self.params = {}
+        self.params: Dict = {}
         self.metric = metric
         self.keep_all = keep_all
         self.format = 'step-%d_score-%.3f'
@@ -35,18 +39,18 @@ class MutliParamSaver(object):
 
         makedirs(self._log_dir)
 
-    def rm_ckpt(self, dir):
+    def rm_ckpt(self, dir: str) -> None:
         rmtree(dir, ignore_errors=True)
 
-    def ckpt_list(self):
+    def ckpt_list(self) -> List[ckpt_t]:
         ckpts = glob.glob(path.join(self._log_dir, '*'))
         # TODO: support format
         reg = re.compile(r'.*step-([0-9]+)_score-([0-9]+.[0-9]+).*')
         dirs = [reg.search(f) for f in ckpts]
-        dirs = [(r.group(0), int(r.group(1)), float(r.group(2))) for r in dirs if r is not None]
-        return dirs
+        dir_tuple = [cast(ckpt_t, (str(r.group(0)), int(r.group(1)), float(r.group(2)))) for r in dirs if r is not None]
+        return dir_tuple
 
-    def best(self, metric):
+    def best(self, metric: Optional[str]) -> ckpt_t:
         files = self.ckpt_list()
         if metric == 'higher':
             mm = max
@@ -60,14 +64,14 @@ class MutliParamSaver(object):
             return None, None, None
         return mm(files, key=lambda x: x[2])
 
-    def latest(self):
+    def latest(self) -> ckpt_t:
         files = self.ckpt_list()
         if len(files) > 0:
             return max(files, key=lambda x: x[1])
         else:
             return None, None, None
 
-    def save(self, step, score):
+    def save(self, step: int, score: Union[int, float]) -> None:
         best_dir, best_step, best_score = self.best(self.metric)
         latest_dir, latest_step, _ = self.latest()
 
@@ -87,17 +91,21 @@ class MutliParamSaver(object):
 
         if not self.keep_all and best_score is not None:
             sign = 1 if self.metric == 'higher' else -1
-            if (score - best_score) * sign > 0:
+            if (score - best_score) * sign > 0 and best_dir is not None:
                 self.rm_ckpt(best_dir)
-            if best_step != latest_step:
+            if best_step != latest_step and latest_dir is not None:
                 self.rm_ckpt(latest_dir)
 
-    def load_ckpt(self, method):
+    def load_ckpt(self, method) -> Tuple[Dict[str, Any], int, str]:
         if method == 'highest' or method == 'lowest':
             # assert self.metric == method
             dir, step, score = self.best(method.replace('est', 'er'))
         else:
             dir, step, score = self.latest()
+
+        assert step is not None
+        assert score is not None
+        assert isinstance(dir, str)
 
         ckpts = glob.glob(path.join(dir, '*'))
 
@@ -109,7 +117,8 @@ class MutliParamSaver(object):
 
         return params, step, dir
 
-    def add_param(self, key, val):
+    def add_param(self, key: str,
+                  val: Union[torch.nn.Module, torch.optim.Optimizer]) -> None:
         self.params[key] = val
 
 
@@ -281,5 +290,5 @@ if __name__ == '__main__':
         opt.step()
         # m.save(i, i)
 
-    ppp = saver.load('latest')
+    ppp = saver.load_ckpt('latest')
     print(ppp)

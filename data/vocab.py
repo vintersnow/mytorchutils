@@ -1,4 +1,5 @@
-from os import path, sys
+from os import path
+import sys
 import numpy as np
 
 ap = path.dirname(path.abspath(__file__))  # dataloader

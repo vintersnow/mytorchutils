@@ -4,9 +4,19 @@ import json
 from .saver import MutliParamSaver
 from tensorboardX import SummaryWriter
 
+import torch
+from typing import Optional, Dict, Tuple
+
 
 class Model(nn.Module):
-    def __init__(self, model, name, log_root=None, opts={}, hps=None, metric=None, cont=False):
+    def __init__(self,
+                 model: nn.Module,
+                 name: str,
+                 log_root: Optional[str] = None,
+                 opts: dict = {},
+                 hps: Optional[Dict] = None,
+                 metric: Optional[str] = None,
+                 cont: bool = False) -> None:
         super(Model, self).__init__()
 
         self.model = model
@@ -49,10 +59,11 @@ class Model(nn.Module):
     def forward(self, *args, **keys):
         return self.model(*args, **keys)
 
-    def restore(self, method='latest'):
+    def restore(self, method: str = 'latest') -> Tuple[int, str]:
         if self.nolog:
             raise ValueError('No log directory')
         params, step, dir = self.saver.load_ckpt(method)
+        assert path.exists(dir)
         self.model.load_state_dict(params['model'])
         params.pop('model', None)
 
@@ -61,35 +72,35 @@ class Model(nn.Module):
                 self.opts[key].load_state_dict(val)
         return step, dir
 
-    def save(self, step, loss):
+    def save(self, step: int, loss: float) -> None:
         if self.nolog:
             raise ValueError('No log directory')
 
         self.saver.save(step, loss)
 
-    def make_writer(self, comment=''):
+    def make_writer(self, comment: str = '') -> SummaryWriter:
         if self.nolog:
             raise ValueError('No log directory')
         summary_dir = path.join(self.log_dir, 'summary')
         self._writer = SummaryWriter(summary_dir, comment)
         return self._writer
 
-    def __del__(self):
+    def __del__(self) -> None:
         if hasattr(self, '_writer'):
             self._writer.close()
 
-    def add_opt(self, key, opt):
+    def add_opt(self, key: str, opt: torch.optim.Optimizer) -> None:
         self.opts[key] = opt
         self.saver.add_param(key, opt)
 
     @property
-    def device(self):
+    def device(self) -> torch.device:
         # 全てのパラメータが同一メモリにあると仮定している
         p = self.model.parameters()
         return next(p).device
 
     @property
-    def writer(self):
+    def writer(self) -> SummaryWriter:
         if not hasattr(self, '_writer'):
             return self.make_writer(self)
         return self._writer
