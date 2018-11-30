@@ -5,6 +5,7 @@ import math
 from typing import Dict, Union, Any
 from .model import Model
 import torch
+from torch.utils.data import DataLoader
 
 
 val_t = Union[int, float]
@@ -41,8 +42,8 @@ class Runner(object):
         return ', '.join([f'{key}: {float(val):.3f}' for key, val in items])
 
     def run(self,
-            train_ld: torch.utils.data.DataLoader,
-            val_ld: torch.utils.data.DataLoader,
+            train_ld: DataLoader,
+            val_ld: DataLoader,
             init_epoch: int = 0,
             max_epoch: int = 5,
             max_step_each_epoch: int = 0,
