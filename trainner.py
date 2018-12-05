@@ -57,7 +57,7 @@ class Runner(object):
 
             self.model.train()
             self.ctx._clear()
-            elapsed = []
+            elapsed: float = 0
             for i, batch in enumerate(train_ld):
                 if i >= epoch_length:
                     break
@@ -69,22 +69,22 @@ class Runner(object):
                 start = time.time()
                 # forward and loss
                 loss = self.train_step(batch)
-                elapsed.append(time.time() - start)
+                elapsed += time.time() - start
 
                 if math.isnan(loss):
                     raise ValueError(f'loss is nan, epoch {epoch}, step {step}')
 
                 with self.olp as w:
                     # logging
-                    w('%s epoch %d/%d step %d/%d' %
-                      (self.model.name, epoch + 1, max_epoch,
-                       (step % epoch_length) + 1, epoch_length))
+                    t = elapsed / (min(i, (step % summary_step) if summary_step > 0 else float('inf')) + 1)
+                    w(f'{self.model.name} epoch {epoch + 1}/{max_epoch} step {(step % epoch_length) + 1}/{epoch_length} '
+                      f'sec/step={t:.3f}')
                     w(self.log_str())
 
                 # write summary
-                if summary_step > 0 and step % summary_step == 0:
-                    self.ctx.scalar['time'] = sum(elapsed) / len(elapsed)
-                    elapsed.clear()
+                if summary_step > 0 and (step + 1) % summary_step == 0:
+                    self.ctx.scalar['time'] = elapsed / min(i + 1, summary_step)
+                    elapsed = 0
                     self.write_summary(step)
 
             # # clean up summary
