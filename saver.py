@@ -52,13 +52,13 @@ class MutliParamSaver(object):
 
     def best(self, metric: Optional[str]) -> ckpt_t:
         files = self.ckpt_list()
-        if metric == 'higher':
+        if len(files) == 0:
+            # logger.error('No ckpt found in %s' % self._log_dir)
+            return None, None, None
+        elif metric == 'higher':
             mm = max
         elif metric == 'lower':
             mm = min
-        elif len(files) == 0:
-            # logger.error('No ckpt found in %s' % self._log_dir)
-            return None, None, None
         else:
             # logger.error('Unknown metric: %s' % metric)
             return None, None, None
