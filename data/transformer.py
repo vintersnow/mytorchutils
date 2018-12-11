@@ -29,7 +29,7 @@ class Text2Id(object):
 
 class Token2Id(object):
     def __init__(self, converter, *keys):
-        if isinstance(converter, dict):
+        if isinstance(converter, (dict, list)):
             self.converter = lambda x: converter[x]
         elif callable(converter):
             self.converter = converter
