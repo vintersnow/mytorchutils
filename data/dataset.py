@@ -7,9 +7,7 @@ from collections import Counter
 
 
 class BaseDataset(Dataset):
-    def __init__(self, file, transformer=None, save_trans=True):
-        assert path.isfile(file), file
-        self.file = file
+    def __init__(self, transformer=None, save_trans=True):
         self.data = None
 
         self.transformer = transformer
@@ -45,10 +43,17 @@ class BaseDataset(Dataset):
         return sample
 
 
-class LineDataset(BaseDataset):
+class FileDataset(BaseDataset):
+    def __init__(self, file, *args, **keys):
+        super(FileDataset, self).__init__(*args, **keys)
+        assert path.isfile(file), file
+        self.file = file
+        self.data = Reader(self.file)
+
+
+class LineDataset(FileDataset):
     def __init__(self, key, *args, **keys):
         super(LineDataset, self).__init__(*args, **keys)
-        self.data = Reader(self.file)
         self.key = key
 
     def prepare(self, idx):
@@ -57,13 +62,21 @@ class LineDataset(BaseDataset):
         return sample
 
 
-class JsonLineDataset(BaseDataset):
+class JsonLineDataset(FileDataset):
     def __init__(self, *args, **keys):
         super(JsonLineDataset, self).__init__(*args, **keys)
-        self.data = Reader(self.file)
 
     def prepare(self, idx):
         return json.loads(self.data[idx])
+
+
+class ListDataset(BaseDataset):
+    def __init__(self, data, *args, **keys):
+        super(ListDataset, self).__init__(*args, **keys)
+        self.data = data
+
+    def prepare(self, idx):
+        return self.data[idx]
 
 
 def create_weights_for_balanced_classes(classes, class_key=None):
