@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 import torch
 
 
-def get_vars(batch, *keys, device=None):
+def get_vars(batch, *keys, device=None, non_blocking=False):
     if not device:
         device = torch.device('cpu')
 
@@ -10,7 +10,7 @@ def get_vars(batch, *keys, device=None):
         if key is None:
             return None
         t = batch[key]
-        return t.to(device)
+        return t.to(device=device, non_blocking=non_blocking)
 
     if len(keys) == 1:
         return tovar(keys[0])
