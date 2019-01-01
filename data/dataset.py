@@ -17,7 +17,7 @@ class BaseDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def transorm(self, sample):
+    def transform(self, sample):
         if self.transformer:
             if isinstance(self.transformer, list):
                 for c in self.transformer:
@@ -36,7 +36,7 @@ class BaseDataset(Dataset):
 
         sample = self.prepare(idx)
 
-        sample = self.transorm(sample)
+        sample = self.transform(sample)
         if self.save_trans:
             self.transformed[idx] = sample
 
