@@ -61,7 +61,7 @@ class Model(object):
 
         self.training = True
 
-    def forward(self, *args, **keys):
+    def __call__(self, *args, **keys):
         return self.model(*args, **keys)
 
     def restore(self, method: str = "latest") -> Tuple[int, str]:
