@@ -5,10 +5,10 @@ from .saver import MutliParamSaver
 from tensorboardX import SummaryWriter
 
 import torch
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, Any
 
 
-class Model(nn.Module):
+class Model(object):
     def __init__(
         self,
         model: nn.Module,
@@ -103,12 +103,12 @@ class Model(nn.Module):
     @property
     def writer(self) -> SummaryWriter:
         if not hasattr(self, "_writer"):
-            return self.make_writer(self)
+            return self.make_writer()
         return self._writer
 
     def __del__(self) -> None:
         if hasattr(self, "_writer"):
             self._writer.close()
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         return getattr(self.model, attr)
