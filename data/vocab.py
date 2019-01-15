@@ -1,4 +1,3 @@
-from logger import get_logger, ERROR
 from os import path
 import sys
 import numpy as np
@@ -6,6 +5,7 @@ import numpy as np
 ap = path.dirname(path.abspath(__file__))  # dataloader
 root = path.dirname(ap)  # root
 sys.path.append(root)
+from logger import get_logger, ERROR
 
 
 SENTENCE_START = "<s>"
