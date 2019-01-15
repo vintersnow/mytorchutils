@@ -1,3 +1,4 @@
+from logger import get_logger, ERROR
 from os import path
 import sys
 import numpy as np
@@ -6,13 +7,12 @@ ap = path.dirname(path.abspath(__file__))  # dataloader
 root = path.dirname(ap)  # root
 sys.path.append(root)
 
-from logger import get_logger, ERROR
 
-SENTENCE_START = '<s>'
-SENTENCE_END = '</s>'
+SENTENCE_START = "<s>"
+SENTENCE_END = "</s>"
 
-PAD_TOKEN = '<pad>'
-UNKNOWN_TOKEN = '<unk>'
+PAD_TOKEN = "<pad>"
+UNKNOWN_TOKEN = "<unk>"
 
 
 class Vocab(object):
@@ -32,12 +32,10 @@ class Vocab(object):
             logger = get_logger(__name__, ERROR)
 
         self._word_to_id = {}
-        self._id_to_word = {-1: ''}
+        self._id_to_word = {-1: ""}
         self._counter = 0
 
-        self.special_tokens = special_tokens = [
-            PAD_TOKEN,
-        ]
+        self.special_tokens = special_tokens = [PAD_TOKEN]
         for w in special_tokens:
             self._add_word(w)
         self.special_ids = [self.word2id(w) for w in self.special_tokens]
@@ -46,20 +44,21 @@ class Vocab(object):
         self._add_word(SENTENCE_START)
         self._add_word(SENTENCE_END)
 
-        with open(vocab_file, 'r', encoding='utf-8') as f:
+        with open(vocab_file, "r", encoding="utf-8") as f:
             for line in f:
                 pieces = line.split()
                 if len(pieces) != 1 and len(pieces) != 2:
                     logger.warning(
-                        'Incorrect formatted line in vocabulary file: {}\n'.
-                        format(line))
+                        "Incorrect formatted line in vocabulary file: {}\n".format(line)
+                    )
                     continue
                 w = pieces[0]
                 if lower:
                     w = w.lower()
                 if w in special_tokens:
                     raise Exception(
-                        'A word "{}" conflicts with special_tokens'.format(w))
+                        'A word "{}" conflicts with special_tokens'.format(w)
+                    )
                 if w in self._word_to_id:
                     continue
                     # raise Exception('Dupilcated word: {}'.format(w))
@@ -71,10 +70,12 @@ class Vocab(object):
 
                 if max_size != 0 and self._counter >= max_size:
                     logger.info(
-                        'Reached to max size of vocabulary: {}. Stop reading'.
-                        format(max_size))
+                        "Reached to max size of vocabulary: {}. Stop reading".format(
+                            max_size
+                        )
+                    )
                     break
-        logger.debug('Finished loading vocabulary')
+        logger.debug("Finished loading vocabulary")
 
         self.pad_id = self.word2id(PAD_TOKEN)
         self.unk_id = self.word2id(UNKNOWN_TOKEN)
@@ -93,14 +94,15 @@ class Vocab(object):
     def id2word(self, id):
         """id(integer)に対応するword(string)を返す"""
         if id not in self._id_to_word:
-            raise ValueError('Id not found in vocab: %d' % id)
+            raise ValueError("Id not found in vocab: %d" % id)
         return self._id_to_word[id]
 
     def __getitem__(self, key):
         return self.word2id(key)
 
     def DecodeIds(self, words):
-        return restore_text(words, self)
+        text = " ".join([self._id_to_word[id] for id in words])
+        return text
 
     @property
     def size(self):
@@ -116,7 +118,7 @@ def restore_text(data, vocab, skips=[]):
         data: (sequence_length) list or ndarray include word id (integer)
         vocab:
     """
-    skips.append(vocab['<pad>'])
+    skips.append(vocab["<pad>"])
     # if isinstance(data, list):
     #     data = np.array(data)
     #
@@ -124,5 +126,5 @@ def restore_text(data, vocab, skips=[]):
     # stop_idx = np.where(data == vocab.stop_id)[0]
     # if len(stop_idx) > 0:
     #     data = data[:stop_idx[0]]
-    text = ' '.join([vocab.id2word(id) for id in data if int(id) not in skips])
+    text = " ".join([vocab.id2word(id) for id in data if int(id) not in skips])
     return text
